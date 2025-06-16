@@ -5,12 +5,15 @@ from PySide2.QtWidgets import QApplication, QMessageBox
 import hou
 
 
+### CONSTANTS ###
+AUTOSAVE_INTERVAL = 0.2  # minutes
+######
+
 
 class AutosaveManager:
     """
     A manager class for handling Houdini autosave functionality.
     """
-
     def __init__(self):
         # initialize logger
         self.logger = logging.getLogger('houdini_logger')
@@ -24,7 +27,6 @@ class AutosaveManager:
         self.autosave_session_mute: bool = False
         self.autosave_timer: Optional[QTimer] = None
         self.autosave_msg: Optional[QMessageBox] = None
-        self.autosave_interval = 0.2  # minutes
 
 
     def autosave_enabled(self):
@@ -102,15 +104,15 @@ class AutosaveManager:
             return
 
         try:
-            self.autosave_interval = float(self.autosave_interval)
+            autosave_interval = float(AUTOSAVE_INTERVAL)
         except ValueError:
-            self.logger.warning(f"Invalid autosave interval: {self.autosave_interval}")
+            self.logger.warning(f"Invalid autosave interval: {autosave_interval}")
 
         self.autosave_timer = QTimer()
         self.autosave_timer.setSingleShot(True)
         self.autosave_timer.timeout.connect(self.check_autosave)
-        self.autosave_timer.start(int(self.autosave_interval * 60 * 1000))
-        self.logger.debug(f"Started autosave timer: {self.autosave_interval}min")
+        self.autosave_timer.start(int(autosave_interval * 60 * 1000))
+        self.logger.debug(f"Started autosave timer: {autosave_interval}min")
         
 
     def check_autosave(self):
@@ -177,13 +179,14 @@ class AutosaveManager:
         if self.should_autosave_timer_run():
             self.start_autosave_timer()
         hou.hipFile.addEventCallback(self.scene_event_callback)
-        self.logger.debug("Added Houdini hipFile event callback")
+        self.logger.debug("Added AutoSave Timer event callback")
 
 
-
-# Instantiate and set up the module-level autosave manager
-autosave_manager = AutosaveManager()
-autosave_manager.setup()
+def run():
+    # Instantiate and set up the module-level autosave manager
+    autosave_manager = AutosaveManager()
+    autosave_manager.setup()
+    
 
 
 
